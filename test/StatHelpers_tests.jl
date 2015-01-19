@@ -28,17 +28,11 @@ facts("t-approximations") do
 	@fact out[2] => roughly(0.05913566783112214, 1e-8)
 end
 
-facts("LogMeanTest") do
-	srand(8675309); data = rand(10)
-	@fact logMeanExp(2., data) => roughly(1.1566289640224618, 1e-8)
-	@fact logMeanExp(-1., data) => roughly(-0.4493802878492036, 1e-8)
-end
-
 facts("fwdBackSigsTest") do
 	srand(8675309); data = randn(100)
 	sigfwd, sigback = calcSigsBoot(data, .1, 10000)
-	@fact sigfwd => roughly(1.083380688899595, 1e-10)
-	@fact sigback => roughly(1.083701335736361, 1e-10)
+	@fact sigfwd => roughly(1.0918194948334807, 1e-10)
+	@fact sigback => roughly(1.085918045549169, 1e-10)
 end
 
 facts("KSGammaTest") do
@@ -59,5 +53,3 @@ facts("ab_thresh_test") do
 	srand(8675309); data = randn(100, 3)
 	@fact calc_ab_thresh(data, .2, 100, 100) => roughly(0.1777841615666656)
 end
-
-

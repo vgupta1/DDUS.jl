@@ -29,9 +29,10 @@ facts("portTest UCS No bounds") do
 	portTest(w, -2.4630938710200345, [0.5253456488147422, 0.4746543511852578])
 end
 
-facts("portTest2  UCS bounds") do
-	srand(8675309); data = randn(500, 2)
-	w = UCSOracle(data, .1, .1, .1)
-	portTest(w, -2.4604223389522866, [0.530985977658841, 0.46901402234115896], TOL=1e-6,
-			unc_lower=[-1e6, -1e6], unc_upper=[1e6, 1e6])
-end
+#VG Comment this back in when we have QP support in test suite
+# facts("portTest2  UCS bounds") do
+# 	srand(8675309); data = randn(500, 2)
+# 	w = UCSOracle(data, .1, .1, .1)
+# 	portTest(w, -2.4604223389522866, [0.530985977658841, 0.46901402234115896], TOL=1e-6,
+# 			unc_lower=[-1e6, -1e6], unc_upper=[1e6, 1e6])
+# end

@@ -11,3 +11,5 @@ include("UCSOracle_tests.jl")  #retains a dependence on Unsetsolver
 include("LCXOracle_tests.jl")
 include("UMOracle_tests.jl")
 #include("UDYOracle_tests.jl")  #needs to be made compatible toFact Check
+
+FactCheck.exitstatus()

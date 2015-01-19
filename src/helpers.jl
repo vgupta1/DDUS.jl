@@ -33,6 +33,101 @@ function boot(data::Matrix, fun::Function, prob::Float64, numBoots::Int, f_args.
 	quantile(out, prob)
 end
 
+#search for a valid bracket multiplicatively
+#primarily used to prep for root-finding
+function bracket(fun, guess; max_iter=32, ratio=2., trace=false)
+    low = guess/ratio
+    hi  = guess * ratio
+
+    f_low  = fun(low)
+    f_hi = fun(hi)
+    iter = 0
+    trace && println("Bracketing:")
+    while((f_low * f_hi >= 0) && (iter < max_iter))
+        trace && println("$iter \t $low \t $hi \t $f_low \t $f_hi")
+        low /= ratio
+        hi  *= ratio
+        f_low  = fun(low)
+        f_hi = fun(hi)
+        iter += 1
+    end
+    iter == max_iter && error("Bracketing Failed")
+
+    if f_hi * fun(hi/ratio) <= 0
+        return hi/ratio, hi
+    elseif f_low * fun(low*ratio) <= 0
+        return low, low*ratio
+    else
+        error("iter $iter \t $f_low \t $f_hi")
+    end
+end
+
+#Assumes both, joint
+function calcSigsBoot(data, delta, numBoots)
+    sigf = calcSigsBoot(data, delta/2., numBoots, :Fwd)
+    sigb = calcSigsBoot(data, delta/2., numBoots, :Back)
+    sigf, sigb
+end
+
+#####
+# b = maximum(data) if x > 0, b= minimum(data) otherwse
+function f_sig(x, mu_adj, data_b, b)
+    expdata = exp(x*data_b)
+    logmeanexp = log(mean(expdata))
+    sqrt(-2mu_adj/x + 2/x^2 * logmeanexp)
+end
+
+#approximate deriv or rootfinding
+#muadj and data_b are already adjusted for numerical stability
+function df_sig(x, mu_adj, data_b) 
+    expdata = exp(x*data_b)
+    logmeanexp = log(mean(expdata))
+    wght_mean = dot(expdata, data_b) / sum(expdata)
+    (x*(wght_mean + mu_adj) -2logmeanexp)/x^3
+end
+
+######
+
+#Sgn of guess encodes whether we are looking at Fwd or Backwd
+function sigFwdBack(data, guess, trace=false)
+    # #check if its degenerate
+    # third_moment = mean(data.^3)
+    # if (guess > 0) && (third_moment < 0)
+    #     return mean(data.^2)
+    # elseif (guess < 0) && (third_moment > 0)
+    #     return mean(data.^2)
+    # end
+
+    #adjust things for stability
+    const b = guess > 0 ? maximum(data) : minimum(data)
+    const mu_adj = mean(data)-b
+    data_b = data-b
+
+    df_sig_(x) = df_sig(x, mu_adj, data_b)
+    #repair bracket if necessary
+    low, hi = bracket(df_sig_, guess, trace=trace)
+
+    trace && println("Bracketing Success:\t $low \t $hi")
+
+    #rootfind
+    xstar = fzero(df_sig_, low, hi)
+    #use root to calc sig
+    f_sig(xstar, mu_adj, data_b, b)
+end
+
+#Takes a Case Specification
+function calcSigsBoot(data, delta, numBoots, CASE)
+    if CASE == :Fwd
+        sigFwdBack_(data_) = sigFwdBack(data_, 1.)
+    elseif CASE == :Back
+        sigFwdBack_(data_) = sigFwdBack(data_, -1.)
+    else
+        error("Case must be either :Fwd or :Back $CASE")
+    end
+    boot(data, sigFwdBack_, 1-delta, numBoots)
+end
+
+
 #calculates the means via t approx
 # if joint, bounds hold (jointly) simultaneously at level 1-delta_
 # o.w. bounds hold individually at level 1-delta_
@@ -44,57 +139,58 @@ function calcMeansT(data, delta_; joint=true)
     mean(data) + quantile(dist, delta)*sig_rt_N, mean(data) + quantile(dist, 1-delta)*sig_rt_N
 end
 
-#Safer versions of log-sum-exp
-function logMeanExp(x::Float64, data_shift::Vector, b::Float64)
-    x*b + log(mean(exp(x * data_shift)))
-end
-logMeanExp(x::Float64, data::Vector) = (const b = x > 0 ? maximum(data) : minimum(data); logMeanExp(x, data-b, b))
+# #Safer versions of log-sum-exp
+# function logMeanExp(x::Float64, data_shift::Vector, b::Float64)
+#     x*b + log(mean(exp(x * data_shift)))
+# end
+# logMeanExp(x::Float64, data::Vector) = (const b = x > 0 ? maximum(data) : minimum(data); logMeanExp(x, data-b, b))
 
-#overwrites hint
-function calcSigSampleHint!(boot_sample::Vector{Float64}, CASE::Symbol, hint::Float64, 
-						min_u::Float64, max_u::Float64; factor = 10.)
-    const mu = mean(boot_sample)
-    if CASE == :Fwd
-        f(x) = 2mu/x - 2/x^2 * logMeanExp(x, boot_sample-max_u, max_u)  #include a negative bc we minimize
-    elseif CASE == :Back
-        f(x) = -2mu/x - 2/x^2 * logMeanExp(-x, boot_sample-min_u, min_u)  #include a negative bc we minimize
-    else
-        error("CASE must be one of :Fwd or :Back")
-    end
+# #overwrites hint
+# function calcSigSampleHint!(boot_sample::Vector{Float64}, CASE::Symbol, hint::Float64, 
+# 						min_u::Float64, max_u::Float64; factor = 10.)
+#     const mu = mean(boot_sample)
+#     if CASE == :Fwd
+#         f(x) = 2mu/x - 2/x^2 * logMeanExp(x, boot_sample-max_u, max_u)  #include a negative bc we minimize
 
-    res = Optim.optimize(f, hint/factor, factor*hint)
+#     elseif CASE == :Back
+#         f(x) = -2mu/x - 2/x^2 * logMeanExp(-x, boot_sample-min_u, min_u)  #include a negative bc we minimize
+#     else
+#         error("CASE must be one of :Fwd or :Back")
+#     end
 
-    !res.converged && error("Bootstrapping Opt did not converge")
-    res.f_minimum >=0 && error("Minimum is positive: \t", res.f_minimum)
+#     res = Optim.optimize(f, hint/factor, factor*hint)
 
-    @assert res.f_minimum < 0
-    hint = res.minimum
-    return sqrt(-res.f_minimum)
-end
+#     !res.converged && error("Bootstrapping Opt did not converge")
+#     res.f_minimum >=0 && error("Minimum is positive: \t", res.f_minimum)
 
-######
-###This is the preferred method
-function calcSigsBoot(data::Vector{Float64}, delta_::Float64, numBoots::Int; 
-                      CASE=:Both, joint=CASE==:Both)
-    const delta  = joint ? delta_/2 : delta_
-    sigfwd = 0.; sigback = 0.;
-    const min_u::Float64 = minimum(data)
-    const max_u::Float64 = maximum(data)
+#     @assert res.f_minimum < 0
+#     hint = res.minimum
+#     return sqrt(-res.f_minimum)
+# end
 
-    #Determine an appropriate hint by calling with large params first
-    #parameter choices equiv to searching [1e-10, 9std(data)]
-    if CASE == :Fwd || CASE == :Both
-        hint = 3e-5*std(data)
-        calcSigSampleHint!(data, :Fwd, hint, min_u, max_u, factor=3e5*std(data))
-        sigfwd = boot(data, calcSigSampleHint!, 1-delta, numBoots, :Fwd, hint, min_u, max_u)
-    end
-    if CASE == :Back || CASE == :Both
-        hint = 3e-5*std(data)
-        calcSigSampleHint!(data, :Back, hint, min_u, max_u, factor=3e5*std(data))
-        sigback = boot(data, calcSigSampleHint!, 1-delta, numBoots, :Back, hint, min_u, max_u)
-    end
-    sigfwd, sigback 
-end
+# ######
+# ###This is the preferred method
+# function calcSigsBoot(data::Vector{Float64}, delta_::Float64, numBoots::Int; 
+#                       CASE=:Both, joint=CASE==:Both)
+#     const delta  = joint ? delta_/2. : delta_
+#     sigfwd = 0.; sigback = 0.;
+#     const min_u::Float64 = minimum(data)
+#     const max_u::Float64 = maximum(data)
+
+#     #Determine an appropriate hint by calling with large params first
+#     #parameter choices equiv to searching [1e-10, 9std(data)]
+#     if CASE == :Fwd || CASE == :Both
+#         hint = 3e-5*std(data)
+#         calcSigSampleHint!(data, :Fwd, hint, min_u, max_u, factor=3e5*std(data))
+#         sigfwd = boot(data, calcSigSampleHint!, 1-delta, numBoots, :Fwd, hint, min_u, max_u)
+#     end
+#     if CASE == :Back || CASE == :Both
+#         hint = 3e-5*std(data)
+#         calcSigSampleHint!(data, :Back, hint, min_u, max_u, factor=3e5*std(data))
+#         sigback = boot(data, calcSigSampleHint!, 1-delta, numBoots, :Back, hint, min_u, max_u)
+#     end
+#     sigfwd, sigback 
+# end
 
 
 #Currently computed using Stephens Approximation 
@@ -144,7 +240,7 @@ function bootDY_sigma(data, delta, numBoots)
 
         #solve
         try       
-            fzero(f, [.01, 500])
+            Roots.fzero(f, [.01, 500])
         catch e
             show(e); println()
             println("Using Manual Bracketing: f(1) $(f(1))  f(2) $(f(2))")
