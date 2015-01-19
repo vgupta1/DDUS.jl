@@ -33,16 +33,16 @@ function UCSOracle(muhat, covhat, Gamma1, Gamma2, eps_)
                 1e-6, Model(), Variable[], true, false)  
 end
 
-function UCSOracle(data, eps_, delta1, delta2; numBoots=10000)
+function UCSOracle(data, eps_, alpha1, alpha2; numBoots=10000)
     muhat  = vec(mean(data, 1))
     covhat = cov(data)
-    Gamma1 = boot_mu(data, delta1, numBoots)
-    Gamma2 = boot_sigma(data, delta2, numBoots)
+    Gamma1 = boot_mu(data, alpha1, numBoots)
+    Gamma2 = boot_sigma(data, alpha2, numBoots)
     UCSOracle(muhat, covhat, Gamma1, Gamma2, eps_)
 end
 
 #preferred interface
-UCSOracle(data, eps_, delta; numBoots=10000) = UCSOracle(data, eps_, delta/2, delta/2, numBoots=numBoots)
+UCSOracle(data, eps_, alpha; numBoots=10000) = UCSOracle(data, eps_, alpha/2, alpha/2, numBoots=numBoots)
 
 #the supp fcn when support = Rd
 function suppFcnUCSRd(xs, muhat, Gamma1, covbar, eps_k, cut_sense=:Max)

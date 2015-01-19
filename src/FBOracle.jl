@@ -25,7 +25,7 @@ FBOracle(mfs, mbs, sigfs, sigbs, eps; TOL=1e-6) =
     FBOracle(mfs, mbs, sigfs, sigbs, log(1/eps), TOL, false)
 
 #Preferred constructors
-function FBOracle(data, eps, delta1, delta2; CUT_TOL=1e-6, numBoots=int(1e4))
+function FBOracle(data, eps, alpha1, alpha2; CUT_TOL=1e-6, numBoots=int(1e4))
     N, d  = size(data)
     mfs   = zeros(Float64, d)
     mbs   = zeros(Float64, d)
@@ -33,13 +33,13 @@ function FBOracle(data, eps, delta1, delta2; CUT_TOL=1e-6, numBoots=int(1e4))
     sigbs = zeros(Float64, d)
 
     for i = 1:d
-        mbs[i], mfs[i] = calcMeansT(data[:, i], delta1/d)
-        sigfs[i], sigbs[i] = calcSigsBoot(data[:, i], delta2/d, numBoots)
+        mbs[i], mfs[i] = calcMeansT(data[:, i], alpha1/d)
+        sigfs[i], sigbs[i] = calcSigsBoot(data[:, i], alpha2/d, numBoots)
     end
     FBOracle(mfs, mbs, sigfs, sigbs, eps, TOL=CUT_TOL)
 end
-FBOracle(data, eps, delta; CUT_TOL=1e-6, numBoots=int(1e4)) = 
-    FBOracle(data, eps, delta/2, delta/2, CUT_TOL=CUT_TOL, numBoots=numBoots)
+FBOracle(data, eps, alpha; CUT_TOL=1e-6, numBoots=int(1e4)) = 
+    FBOracle(data, eps, alpha/2, alpha/2, CUT_TOL=CUT_TOL, numBoots=numBoots)
 
 suppFcn(xs, w::FBOracle, cut_sense) = 
     suppFcnFB(xs, w.mfs, w.mbs, w.sigfs, w.sigbs, w.log_eps, cut_sense)

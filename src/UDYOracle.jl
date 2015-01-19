@@ -27,12 +27,12 @@ type UDYOracle <: AbstractOracle
 end
 
 #preferred interface
-function UDYOracle(data, eps_, delta; numBoots=10000, cut_tol=1e-6, debug_printcut=false)
+function UDYOracle(data, eps_, alpha; numBoots=10000, cut_tol=1e-6, debug_printcut=false)
     muhat  = vec(mean(data, 1))
     covhat = cov(data)
     C = chol(inv(covhat))
-    gamma1 = bootDY_mu(data, delta/2, numBoots)
-    gamma2 = bootDY_sigma(data, delta/2, numBoots)
+    gamma1 = bootDY_mu(data, alpha/2, numBoots)
+    gamma2 = bootDY_sigma(data, alpha/2, numBoots)
     UDYOracle(eps_, gamma1, gamma2, muhat, covhat, C, 
                 cut_tol, Model(solver=MosekSolver()), Variable[], debug_printcut)
 end

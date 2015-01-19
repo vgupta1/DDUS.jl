@@ -172,14 +172,14 @@ type LCXOracle <: AbstractOracle
 end
 
 #Preferred Interface
-function LCXOracle(data, eps_, delta; 
+function LCXOracle(data, eps_, alpha; 
                     cut_tol=1e-6, max_iter=100, ab_cut_tol=1e-6, 
                     lbounds=Float64[], ubounds=Float64[],
                     debug_printcut=false, trace=false, 
                     numSamples=int(1e4), numBoots=int(1e4), 
                     Gamma =-1.0, abcut_solver=nothing, outer_solver=nothing) 
     @assert (0 < eps_ < 1) "Epsilon invalid: $eps_"
-    Gamma_ = Gamma < 0 ? calc_ab_thresh(data, delta, numBoots, numSamples) : Gamma
+    Gamma_ = Gamma < 0 ? calc_ab_thresh(data, alpha, numBoots, numSamples) : Gamma
     LCXOracle(data, eps_, Gamma_, cut_tol, max_iter,
                 ab_cut_tol, abcut_solver, outer_solver, lbounds, ubounds, debug_printcut, trace)
 end

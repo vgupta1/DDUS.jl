@@ -63,9 +63,9 @@ function bracket(fun, guess; max_iter=32, ratio=2., trace=false)
 end
 
 #Assumes both, joint
-function calcSigsBoot(data, delta, numBoots)
-    sigf = calcSigsBoot(data, delta/2., numBoots, :Fwd)
-    sigb = calcSigsBoot(data, delta/2., numBoots, :Back)
+function calcSigsBoot(data, alpha, numBoots)
+    sigf = calcSigsBoot(data, alpha/2., numBoots, :Fwd)
+    sigb = calcSigsBoot(data, alpha/2., numBoots, :Back)
     sigf, sigb
 end
 
@@ -108,7 +108,7 @@ function sigFwdBack(data, guess, trace=false)
 end
 
 #Takes a Case Specification
-function calcSigsBoot(data, delta, numBoots, CASE)
+function calcSigsBoot(data, alpha, numBoots, CASE)
     if CASE == :Fwd
         sigFwdBack_(data_) = sigFwdBack(data_, 1.)
     elseif CASE == :Back
@@ -116,51 +116,51 @@ function calcSigsBoot(data, delta, numBoots, CASE)
     else
         error("Case must be either :Fwd or :Back $CASE")
     end
-    boot(data, sigFwdBack_, 1-delta, numBoots)
+    boot(data, sigFwdBack_, 1-alpha, numBoots)
 end
 
 
 #calculates the means via t approx
-# if joint, bounds hold (jointly) simultaneously at level 1-delta_
-# o.w. bounds hold individually at level 1-delta_
-function calcMeansT(data, delta_; joint=true)
+# if joint, bounds hold (jointly) simultaneously at level 1-alpha_
+# o.w. bounds hold individually at level 1-alpha_
+function calcMeansT(data, alpha_; joint=true)
     const N   = length(data)
     const sig_rt_N = std(data)/sqrt(N)
     dist      = TDist(N-1)
-    delta = joint ? delta_/2 : delta_
-    mean(data) + quantile(dist, delta)*sig_rt_N, mean(data) + quantile(dist, 1-delta)*sig_rt_N
+    alpha = joint ? alpha_/2 : alpha_
+    mean(data) + quantile(dist, alpha)*sig_rt_N, mean(data) + quantile(dist, 1-alpha)*sig_rt_N
 end
 
 #Currently computed using Stephens Approximation 
 #Journaly of Royal Statistical Society 1970
-function KSGamma(delta, N) 
+function KSGamma(alpha, N) 
        const sqrt_N = sqrt(N)
-       const num = sqrt(.5 * log(2/delta))
+       const num = sqrt(.5 * log(2/alpha))
        const denom = sqrt_N + .12 + .11/sqrt_N
        num/denom
 end
 
 kappa(eps_) = sqrt(1./eps_ - 1.)
 
-function boot_mu(data, delta, numBoots)
+function boot_mu(data, alpha, numBoots)
     const muhat = mean(data, 1)
     myfun(data_b) = norm(mean(data_b, 1) - muhat)
-    boot(data, myfun, 1-delta, numBoots)
+    boot(data, myfun, 1-alpha, numBoots)
 end
 
-function boot_sigma(data, delta, numBoots)
+function boot_sigma(data, alpha, numBoots)
     const covhat = cov(data)
     myfun(data_b) = vecnorm(cov(data_b) - covhat)
-    boot(data, myfun, 1-delta, numBoots)
+    boot(data, myfun, 1-alpha, numBoots)
 end
 
-function bootDY_mu(data, delta, numBoots)
+function bootDY_mu(data, alpha, numBoots)
     muhat = mean(data, 1)
     myfun(data_b) = (mu = mean(data_b, 1); ((mu-muhat) * inv(cov(data)) * (mu-muhat)')[1])
-    boot(data, myfun, 1-delta, numBoots)
+    boot(data, myfun, 1-alpha, numBoots)
 end 
 
-function bootDY_sigma(data, delta, numBoots)
+function bootDY_sigma(data, alpha, numBoots)
     mu0  = mean(data, 1)
     sig0 = cov(data)
    
@@ -215,7 +215,7 @@ function bootDY_sigma(data, delta, numBoots)
         end
 
    end
-   boot(data, myfun, 1-delta, numBoots)
+   boot(data, myfun, 1-alpha, numBoots)
 end
 
 ### Used by UM and UIOracle
@@ -293,12 +293,12 @@ function randL1!(a, sgns)
 end
 
 #Approximates the threshold by sampling a bunch of abs for each bootstrap rep
-function calc_ab_thresh(data::Matrix, delta::Float64, numBoots::Int, numSamples::Int)
+function calc_ab_thresh(data::Matrix, alpha::Float64, numBoots::Int, numSamples::Int)
     const N = size(data, 1)
     const d = size(data, 2)
     a::Vector{Float64} = zeros(Float64, d)
     sgns::Vector{Int}  = zeros(Int64, d)
-    boot(data, f2, 1-delta, numBoots, data, numSamples, a, sgns)
+    boot(data, f2, 1-alpha, numBoots, data, numSamples, a, sgns)
 end
 
 function compute_cs(boot_indx)

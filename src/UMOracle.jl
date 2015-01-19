@@ -19,13 +19,13 @@ function suppFcnUM(xs, lquants, uquants, cut_sense=:Max)
     end
 end
 
-function calc_s(data, eps_, delta)
+function calc_s(data, eps_, alpha)
 	N, d = size(data)
-	if (1-eps_/d)^N  > delta / 2d
+	if (1-eps_/d)^N  > alpha / 2d
 		return N + 1
 	else
 		dBin = Binomial(N, 1-eps_/d)
-		return quantile(dBin, 1-delta/2d)
+		return quantile(dBin, 1-alpha/2d)
 	end
 end
 
@@ -43,8 +43,8 @@ suppFcn(xs::Vector, w::UMOracle, cut_sense) =
         suppFcnUM(xs, w.lquants, w.uquants, cut_sense)
 
 #Preferred Interface
-function UMOracle(data, lbounds, ubounds, eps_, delta; cut_tol=1e-6, debug_printcut=false)
-	s = calc_s(data, eps_, delta)
+function UMOracle(data, lbounds, ubounds, eps_, alpha; cut_tol=1e-6, debug_printcut=false)
+	s = calc_s(data, eps_, alpha)
 	N = size(data, 1)
 	@assert N- s + 1 < s "UM: N not sufficiently big N: $N \t s: $s"
 	if s == N + 1

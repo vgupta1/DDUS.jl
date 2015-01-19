@@ -24,10 +24,10 @@ type UIOracle <: AbstractOracle
 end
 
 #preferred constructor
-function UIOracle(data, lbounds, ubounds, eps, delta; cut_tol = 1e-6) 
+function UIOracle(data, lbounds, ubounds, eps, alpha; cut_tol = 1e-6) 
     N, d = size(data)
     data_sort = sort_data_cols(data)
-    Gamma = KSGamma(delta, N)
+    Gamma = KSGamma(alpha, N)
     qL, qR = gen_ql_qr(N, Gamma)
     UIOracle(vec(lbounds), vec(ubounds), data_sort, log(1/eps), qL, qR, 1e-6, false)
 end
