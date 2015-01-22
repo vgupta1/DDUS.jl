@@ -1,6 +1,7 @@
 # Data-Driven Uncertainty Sets (DDUS)
 
 [![Build Status](https://travis-ci.org/vgupta1/DDUS.jl.svg?branch=master)](https://travis-ci.org/vgupta1/DDUS.jl)
+[![Coverage Status](https://coveralls.io/repos/vgupta1/DDUS.jl/badge.svg)](https://coveralls.io/r/vgupta1/DDUS.jl)
 
 **DDUS.jl** contains implementations of many of the uncertainty sets from the paper
 

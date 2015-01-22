@@ -15,4 +15,6 @@ before_install:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 script:
   - julia -e 'Pkg.init(); Pkg.clone(pwd()); Pkg.clone("https://github.com/IainNZ/JuMPeR.jl.git")'
-  - julia -e 'Pkg.test("DDUS")'
+  - julia -e 'Pkg.test("DDUS", coverage=true)'
+after_success:
+  - julia -e 'cd(Pkg.dir("DDUS")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
