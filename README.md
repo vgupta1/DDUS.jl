@@ -42,7 +42,7 @@ All oracles assume that the data are given with each example in a row, and each 
 Although fairly robust (*punny*), the preferred constructors for oracles can sometimes be slow because they perform all of the data analysis required to construct the set.  When possible, one can reuse the same oracle for multiple constraints.  When solving different optimization problems in a loop, one can also used the specialized constructors for the oracles to customize the data analysis step.  (See the comments in the source code.)
 
 ## Examples
-To be added.
+The examples folder contains a simple portfolio allocation demonstrating typical usage of the sets.  
 
 ## Choosing the "Right" set and Tuning Epsilon and Alpha in Practice
 The cited paper proves that under certain conditions, each of the above sets satisfy a strong probabilistic guarantee.  In applications where it is important to have a provable guarantee on feasibility, those results can help guide the choice of set. 
