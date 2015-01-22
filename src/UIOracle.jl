@@ -3,7 +3,6 @@
 ###
 # Only supports cutting planes
 using Optim
-import JuMPeR: registerConstraint, setup, generateCut, generateReform
 
 export UIOracle
 export suppFcn
@@ -127,10 +126,6 @@ end
 #preferred interface
 suppFcn(xs, w::UIOracle, cut_sense) = suppFcnUI(xs, w.data_sort, w.lbounds, w.ubounds, w.log_eps, w.qL, w.qR, cut_sense)
 
-# JuMPeR alerting us that we're handling this contraint
-registerConstraint(w::UIOracle, rm::Model, ind::Int, prefs) = 
-	! get(prefs, :prefer_cuts, true) && error("Only cutting plane supported")
-
 function setup(w::UIOracle, rm::Model, prefs)
     # Extract preferences we care about
     w.debug_printcut = get(prefs, :debug_printcut, false)
@@ -139,37 +134,3 @@ function setup(w::UIOracle, rm::Model, prefs)
     @assert (rd.numUncs == size(w.data_sort, 2)) "Num Uncertainties $(rd.numUncs) doesn't match columns in data $(size(w.data_sort, 2))"
     @assert (length(rd.uncertaintyset) == 0) "Auxiliary constraints on uncertainties not yet supported"
 end
-
-function generateCut(w::UIOracle, m::Model, rm::Model, inds::Vector{Int}, active=false)
-    new_cons = {}
-    rd = JuMPeR.getRobust(rm)
-    for ind in inds
-        con = JuMPeR.get_uncertain_constraint(rm, ind)
-        cut_sense, xs, lhs_const = JuMPeR.build_cut_objective(rm, con, m.colVal)
-        zstar, ustar = suppFcnUI(xs, w.data_sort, w.lbounds, w.ubounds, w.log_eps, w.qL, w.qR, cut_sense)
-        lhs_of_cut = zstar + lhs_const
-
-        # SUBJECT TO CHANGE: active cut detection
-        if active
-            push!(rd.activecuts[ind], 
-                JuMPeR.cut_to_scen(ustar, 
-                    JuMPeR.check_cut_status(con, lhs_of_cut, w.cut_tol) == :Active))
-            continue
-        end
-
-        # Check violation
-        if JuMPeR.check_cut_status(con, lhs_of_cut, w.cut_tol) != :Violate
-            w.debug_printcut && JuMPeR.debug_printcut(rm ,m,w,lhs_of_cut,con,nothing)
-            continue  # No violation, no new cut
-        end
-        
-        # Create and add the new constraint
-        new_con = JuMPeR.build_certain_constraint(m, con, ustar)
-        w.debug_printcut && JuMPeR.debug_printcut(rm, m, w, lhs_of_cut, con, new_con)
-        push!(new_cons, new_con)
-    end
-    return new_cons
-end
-
-#Shouldn't be called
-generateReform(w::UIOracle, m::Model, rm::Model, inds::Vector{Int}) = 0

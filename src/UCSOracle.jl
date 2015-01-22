@@ -2,7 +2,6 @@
 # UCS Oracle 
 ###
 # At the moment only supports cutting planes
-import JuMPeR: registerConstraint, setup, generateCut, generateReform
 import JuMP.UnsetSolver  #remove this dependence
 
 export UCSOracle

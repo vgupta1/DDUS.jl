@@ -3,7 +3,6 @@
 ###
 # At the moment only supports cutting planes
 using JuMPeR
-import JuMPeR: registerConstraint, setup, generateCut, generateReform
 import MathProgBase.AbstractMathProgSolver
 
 export LCXOracle

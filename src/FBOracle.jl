@@ -2,7 +2,6 @@
 # FB Oracle 
 ###
 # At the moment only supports cutting planes
-import JuMPeR: registerConstraint, setup, generateCut, generateReform
 
 export FBOracle
 export suppFcn
