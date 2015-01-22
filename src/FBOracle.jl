@@ -4,7 +4,6 @@
 # At the moment only supports cutting planes
 
 export FBOracle
-export suppFcn
 
 type FBOracle <: AbstractOracle
     mfs::Vector{Float64}
@@ -86,7 +85,3 @@ function setup(w::FBOracle, rm::Model, prefs)
     #ignore any additional constraints on uncertainties for now
     @assert (length(rd.uncertaintyset) == 0) "Auxiliary constraints on uncertainties not yet supported"
 end
-
-
-
-

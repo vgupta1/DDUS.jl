@@ -5,9 +5,12 @@
 module DDUS
 
 # The JuMPeR oracle interface
+import JuMPeR
 import JuMPeR: AbstractOracle, registerConstraint, setup, generateCut, generateReform
 
+
 include("helpers.jl")
+export suppFcn
 include("FBOracle.jl")
 include("UIOracle.jl")
 include("UCSOracle.jl")

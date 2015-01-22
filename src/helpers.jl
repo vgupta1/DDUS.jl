@@ -2,7 +2,7 @@
 # Helpers
 ###
 # Contains statistical and other routines used by data-driven sets
-using Distributions, Roots, JuMP #VG Can these be moved above?
+using Distributions, Roots, JuMP, Optim
 
 export boot, calcMeansT, calcSigsBoot
 export boot_mu, boot_sigma, bootDY_mu, bootDY_sigma, calc_ab_thresh
@@ -13,7 +13,7 @@ function boot(data::Vector, fun::Function, prob::Float64, numBoots::Int, f_args.
 	const N = size(data, 1)
 	dist = DiscreteUniform(1, N)
 	out = zeros(Float64, numBoots)
-	indices = [1:N]::Vector{Int}
+	indices = Int[1:N]
 	for i = 1:numBoots
 		rand!(dist, indices)
 		out[i] = fun(data[indices], f_args...)
@@ -25,7 +25,7 @@ function boot(data::Matrix, fun::Function, prob::Float64, numBoots::Int, f_args.
 	const N = size(data, 1)
 	dist = DiscreteUniform(1, N)
 	out = zeros(Float64, numBoots)
-	indices = [1:N]::Vector{Int}
+	indices = Int[1:N]
 	for i = 1:numBoots
 		rand!(dist, indices)
 		out[i] = fun(data[indices, :], f_args...)

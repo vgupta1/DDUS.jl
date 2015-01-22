@@ -1,8 +1,6 @@
 #####
 # UM
 #####
-import JuMP.UnsetSolver
-
 export UMOracle
 
 #returns zstar, ustar

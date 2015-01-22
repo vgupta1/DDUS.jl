@@ -5,7 +5,6 @@
 import JuMP.UnsetSolver  #remove this dependence
 
 export UCSOracle
-export suppFcn
 
 type UCSOracle <: AbstractOracle
     eps_kappa::Float64

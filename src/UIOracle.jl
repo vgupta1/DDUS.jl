@@ -1,11 +1,8 @@
 ###
 # UI Oracle 
 ###
-# Only supports cutting planes
-using Optim
 
 export UIOracle
-export suppFcn
 
 type UIOracle <: AbstractOracle
     lbounds::Vector{Float64}

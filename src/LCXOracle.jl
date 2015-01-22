@@ -2,11 +2,9 @@
 # LCX Oracle 
 ###
 # At the moment only supports cutting planes
-using JuMPeR
 import MathProgBase.AbstractMathProgSolver
 
 export LCXOracle
-export suppFcn
 
 #returns bool, violated ab_cut
 #Solves 4 LPs
