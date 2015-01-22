@@ -58,13 +58,18 @@ function suppFcnUCSRd(xs, muhat, Gamma1, covbar, eps_k, cut_sense=:Max)
 end
 
 function suppFcn(xs, w::UCSOracle, cut_sense)
-    !w.unbounded_support && error("UCS suppFcn only defined for unbounded uncertainties")
-    suppFcnUCSRd(xs, w.muhat, w.Gamma1, w.covbar, w.eps_kappa, cut_sense)
-end
+    if w.unbounded_support
+        return suppFcnUCSRd(xs, w.muhat, w.Gamma1, w.covbar, w.eps_kappa, cut_sense)
+    else
+        setObjective(w.cut_model, cut_sense, sum([xs[ix] * w.cut_vars[ix] for ix=1:length(w.cut_vars)]))
 
-# JuMPeR alerting us that we're handling this contraint
-registerConstraint(w::UCSOracle, rm::Model, ind::Int, prefs) = 
-	! get(prefs, :prefer_cuts, true) && error("Only cutting plane supported")
+        cut_solve_status = solve(w.cut_model, suppress_warnings=true)
+        cut_solve_status != :Optimal && error("Cutting plane problem failed: $cut_solve_status")
+        ustar = getValue(w.cut_vars)
+        zstar = getObjectiveValue(w.cut_model)
+        return zstar, ustar
+    end
+end
 
 function setup(w::UCSOracle, rm::Model, prefs)
     # Extract preferences we care about
@@ -103,50 +108,3 @@ function setup(w::UCSOracle, rm::Model, prefs)
         w.cut_vars = us[:]
     end
 end
-
-function generateCut(w::UCSOracle, m::Model, rm::Model, inds::Vector{Int}, active=false)
-    rd = JuMPeR.getRobust(rm)
-    master_sol = m.colVal
-    new_cons = {}
-
-    for ind in inds
-        # Update the cutting plane problem's objective
-        con = JuMPeR.get_uncertain_constraint(rm, ind)
-        cut_sense, unc_obj_coeffs, lhs_const = 
-                JuMPeR.build_cut_objective(rm, con, master_sol)
-        
-        if w.unbounded_support
-            zstar, ustar = suppFcn(unc_obj_coeffs, w, cut_sense)
-        else
-            setObjective(w.cut_model, cut_sense, sum([unc_obj_coeffs[ix] * w.cut_vars[ix] for ix=1:length(w.cut_vars)]))
-
-            cut_solve_status = solve(w.cut_model, suppress_warnings=true)
-            cut_solve_status != :Optimal && error("Cutting plane problem failed: $cut_solve_status")
-            ustar = getValue(w.cut_vars)
-            zstar = getObjectiveValue(w.cut_model)
-        end
-        lhs_of_cut = zstar + lhs_const
-
-        # SUBJECT TO CHANGE: active cut detection
-        if active
-            push!(rd.activecuts[ind], 
-                JuMPeR.cut_to_scen(ustar, 
-                    JuMPeR.check_cut_status(con, lhs_of_cut, w.cut_tol) == :Active))
-            continue
-        end
-
-        # Check violation
-        if JuMPeR.check_cut_status(con, lhs_of_cut, w.cut_tol) != :Violate
-            w.debug_printcut && JuMPeR.debug_printcut(rm ,m,w,lhs_of_cut,con,nothing)
-            continue  # No violation, no new cut
-        end
-        
-        # Create and add the new constraint
-        new_con = JuMPeR.build_certain_constraint(m, con, ustar)
-        w.debug_printcut && JuMPeR.debug_printcut(rm, m, w, lhs_of_cut, con, new_con)
-        push!(new_cons, new_con)
-    end
-    return new_cons
-end
-
-generateReform(w::UCSOracle, m::Model, rm::Model, inds::Vector{Int}) = 0

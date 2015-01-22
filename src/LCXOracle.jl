@@ -188,10 +188,6 @@ suppFcn(xs, w::LCXOracle, cut_sense) =
         lbounds=w.lbounds, ubounds=w.ubounds, TOL=w.ab_cut_tol, MAXITER=w.max_iter, 
         trace=w.trace, outer_solver=w.outer_solver, abcut_solver=w.abcut_solver)
 
-# JuMPeR alerting us that we're handling this contraint
-registerConstraint(w::LCXOracle, rm::Model, ind::Int, prefs) = 
-    ! get(prefs, :prefer_cuts, true) && error("Only cutting plane supported")
-
 function setup(w::LCXOracle, rm::Model, prefs)
     rd = JuMPeR.getRobust(rm)
     @assert (rd.numUncs == size(w.data, 2)) "Num Uncertainties $(rd.numUncs) doesn't match columns in data $(size(w.data, 2))"
@@ -211,39 +207,3 @@ function setup(w::LCXOracle, rm::Model, prefs)
     w.debug_printcut = get(prefs, :debug_printcut, false)
     w.cut_tol        = get(prefs, :cut_tol, w.cut_tol)
 end
-
-function generateCut(w::LCXOracle, m::Model, rm::Model, inds::Vector{Int}, active=false)
-    new_cons = {}
-    rd = JuMPeR.getRobust(rm)
-
-    for ind in inds
-        con = JuMPeR.get_uncertain_constraint(rm, ind)
-        cut_sense, xs, lhs_const = JuMPeR.build_cut_objective(rm, con, m.colVal)
-        d = size(w.data, 2)
-        zstar, ustar = suppFcn(xs, w, cut_sense)
-        lhs_of_cut = zstar + lhs_const
-
-        # SUBJECT TO CHANGE: active cut detection
-        if active
-            push!(rd.activecuts[ind], 
-                JuMPeR.cut_to_scen(ustar, 
-                    JuMPeR.check_cut_status(con, lhs_of_cut, w.cut_tol) == :Active))
-            continue
-        end
-
-        # Check violation
-        if JuMPeR.check_cut_status(con, lhs_of_cut, w.cut_tol) != :Violate
-            w.debug_printcut && JuMPeR.debug_printcut(rm ,m,w,lhs_of_cut,con,nothing)
-            continue  # No violation, no new cut
-        end
-        
-        # Create and add the new constraint
-        new_con = JuMPeR.build_certain_constraint(m, con, ustar)
-        w.debug_printcut && JuMPeR.debug_printcut(rm, m, w, lhs_of_cut, con, new_con)
-        push!(new_cons, new_con)
-    end
-    return new_cons
-end
-
-#Shouldn't be called
-generateReform(w::LCXOracle, m::Model, rm::Model, inds::Vector{Int}) = 0
