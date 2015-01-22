@@ -1,25 +1,23 @@
-# DDUS
+# Data-Driven Uncertainty Sets (DDUS)
 
 [![Build Status](https://travis-ci.org/vgupta1/DDUS.jl.svg?branch=master)](https://travis-ci.org/vgupta1/DDUS.jl)
 
-Data-Driven Uncertainty Sets (DDUS)
-==========
+**DDUS.jl** contains implementations of many of the uncertainty sets from the paper
 
-The package DDUS contains implementations of many of the constructions for uncertainty sets from the paper "Data-Driven Robust Optimization" by D. Bertsimas, V. Gupta and N. Kallus, available from [here](http://arxiv.org/abs/1401.0212).   
-Specifically, we have implemented oracles for each of the following sets (Eq. numbers refer to previous paper):
-- UM - (Eq. 28) 
-- UI - (Eq. 18) 
-- UFB - (Eq. 23)
-- UCS - (Eq. 35)
-- ULCX - (Eq. 31)
+> [D. Bertsimas, V. Gupta and N. Kallus, "Data-Driven Robust Optimization"](http://arxiv.org/abs/1401.0212)
 
-More sets and additional features may be added going forward based on interest.  
+as "oracles" for use with [JuMPeR.jl](https://github.com/IainNZ/JuMPeR.jl). Specifically, we have implemented oracles for each of the following sets (Eq. numbers refer to previous paper):
+- UM (Eq. 28) 
+- UI (Eq. 18) 
+- UFB (Eq. 23)
+- UCS (Eq. 35)
+- ULCX (Eq. 31)
 
-For the most part, our implementations closely follow the descriptions in the paper.  In a few places, we have opted for simpler, approximate formulae for improved efficiency where we felt the difference in practice was negligible.   
+More sets and additional features may be added going forward based on interest.  For the most part, our implementations closely follow the descriptions in the paper.  In a few places, we have opted for simpler, approximate formulae for improved efficiency where we felt the difference in practice was negligible.
 
-##Usage
+## Usage
 
-Each of our constructions are suitable to be used with JuMPeR as *cutting plane* oracles.  Reformulation may be supported in the future based on need.  A typical invocation might be:
+All our sets support JuMPeR's cutting plane functionality, but do not provide reformulations. Reformulation may be supported in the future based on need.  A typical invocation might be:
 
 ```julia
 using JuMPeR, DDUSets
@@ -36,7 +34,7 @@ or
 addConstraint(m, x[1] * us[1] + xs[2] * us[2] <= 5, dd_oracle)  #only for this one constraint
 ```
 
-Most oracles support a simple constructor as above, taking in the data and two parameters, epsilon and alpha.  Some oracles require additional information, such as the support of the uncertainty. (When in doubt, check the source file for the interface marked "preferred interface.")  
+Most oracles support a simple constructor as above, taking in the data and two parameters, `epsilon` and `alpha`.  Some oracles require additional information, such as the support of the uncertainty. (When in doubt, check the source file for the interface marked "preferred interface.") 
 
 All oracles assume that the data are given with each example in a row, and each column representing one component of the uncertainty.  **The ordering of the columns is important** and is assumed to correspond to the index of the uncertainties in the optimization model.  (That is, u[1] is the uncertainty whose data is given by column 1.)  The parameters epsilon and alpha are described in detail the above paper, and roughly control the probability of infeasibility and the decision maker's tolerance for ambiguity, respectively.  See also below on tuning these parameters.
 
@@ -53,17 +51,15 @@ Many applications, however, do not require provably good performance, just *prac
 ## Citation
 If you find this package useful, please consider citing the above paper as:
 
-> @ARTICLE{2014arXiv1401.0212B,
+```bibtex
+@ARTICLE{2014arXiv1401.0212B,
    author = {Bertsimas, D. and Gupta, V. and Kallus, N.},
-    title = "{Data-Driven Robust Optimization}",
-    journal = {ArXiv e-prints},
+   title = "{Data-Driven Robust Optimization}",
+   journal = {ArXiv e-prints},
    eprint = {1401.0212},
    keywords = {Mathematics - Optimization and Control},
    year = 2014,
-  month = dec,
-  url = {http://arxiv.org/abs/1401.0212},
+   month = dec,
+   url = {http://arxiv.org/abs/1401.0212},
 }
-
-
-
-
+```
