@@ -32,9 +32,27 @@ function test_um()
     end
     # Benchmark Min
     @time for i in 1:1000000
-        zstar, ustar = suppFcn([1, 1], w, :Max)
+        zstar, ustar = suppFcn([1, -1], w, :Max)
     end
 end
-    
+
+function test_ui()
+    srand(8675309); data = rand(200, 2)
+    w = UIOracle(data, [0, 0], [1, 1], .1, .2) 
+
+    # Warmup
+    zstar, ustar = suppFcn([1, 1], w, :Min)
+    # Benchmark Min
+    @time for i in 1:10000
+        zstar, ustar = suppFcn([1, 1], w, :Min) 
+    end
+    #Profile.print(format=:flat)
+    # Benchmark Max
+    @time for i in 1:10000
+        zstar, ustar = suppFcn([1, -1], w, :Max) 
+    end
+end
+
 #test_fb()
-test_um()
+#test_um()
+test_ui()
