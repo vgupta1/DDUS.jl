@@ -47,10 +47,10 @@ suppFcn(xs, w::FBOracle, cut_sense) =
 function suppFcnFB(xs, mfs, mbs, sigfs, sigbs, log_eps, cut_sense=:Max)
     sign_flip = 1
     if cut_sense == :Min
-        xs = copy(-xs)
+        xs = -xs
         sign_flip = -1
     end
-    lam = 0
+    lam = 0.0
     for i = 1:length(xs)
         if xs[i] >= 0
             lam += sigfs[i]^2 * xs[i]^2
@@ -58,8 +58,7 @@ function suppFcnFB(xs, mfs, mbs, sigfs, sigbs, log_eps, cut_sense=:Max)
             lam += sigbs[i]^2 * xs[i]^2
         end
     end
-    lam /= (2 * log_eps)
-    lam = sqrt(lam)
+    lam = sqrt(lam / (2 * log_eps))
     ustar = zeros(length(xs))
     for i = 1:length(xs)
         if xs[i] >= 0
