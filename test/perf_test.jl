@@ -19,4 +19,22 @@ function test_fb()
     end
 end
 
-test_fb()
+function test_um()
+    lquants = [-.05, -.25]
+    uquants = [.1, .2]
+    w = UMOracle(lquants, uquants, 1e-6, false)
+
+    # Warmup
+    zstar, ustar = suppFcn([1, 1], w, :Min)
+    # Benchmark Min
+    @time for i in 1:1000000
+        zstar, ustar = suppFcn([1, 1], w, :Min)
+    end
+    # Benchmark Min
+    @time for i in 1:1000000
+        zstar, ustar = suppFcn([1, 1], w, :Max)
+    end
+end
+    
+#test_fb()
+test_um()

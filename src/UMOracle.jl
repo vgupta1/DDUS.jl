@@ -6,13 +6,21 @@ export UMOracle
 #returns zstar, ustar
 function suppFcnUM(xs, lquants, uquants, cut_sense=:Max)
     const d = length(lquants)
-    if cut_sense == :Min
-    	ustar = [xs[i] > 0 ? lquants[i] : uquants[i] for i =1:d]
-        return sum(min(lquants .* xs, uquants .* xs)), ustar
-    else
-    	ustar = [xs[i] > 0 ? uquants[i] : lquants[i] for i =1:d]
-    	return sum(max(lquants .* xs, uquants .* xs)), ustar
+
+    zstar = 0.0
+    for i in 1:d
+        mn, mx = minmax(lquants[i] * xs[i], uquants[i] * xs[i])
+        zstar += ifelse(cut_sense == :Min, mn, mx)
     end
+
+    ustar = Array(Float64, d)
+    posxopt = (cut_sense == :Min) ? lquants : uquants
+    negxopt = (cut_sense == :Min) ? uquants : lquants
+    for i in 1:d
+       ustar[i] = xs[i] > 0 ? posxopt[i] : negxopt[i]
+    end
+    
+    return zstar, ustar
 end
 
 function calc_s(data, eps_, alpha)
