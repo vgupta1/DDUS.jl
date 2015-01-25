@@ -1,12 +1,8 @@
 ###
 # UI Oracle 
 ###
-# Only supports cutting planes
-using Optim
-import JuMPeR: registerConstraint, setup, generateCut, generateReform
 
 export UIOracle
-export suppFcn
 
 type UIOracle <: AbstractOracle
     lbounds::Vector{Float64}
@@ -71,10 +67,10 @@ function suppFcnUI(xs, data_sort, lbounds, ubounds,
     end
 
     #extend data with bounds, pre-condition for stability
-    xdata::Matrix{Float64} = [lbounds'; data_sort; ubounds']
-    cnst_term::Float64 = 0.
+    xdata = [lbounds'; data_sort; ubounds']
+    cnst_term = 0.0
     for i = 1:d
-        shift = xs[i] > 0. ? ubounds[i] : lbounds[i]
+        shift = xs[i] > 0.0 ? ubounds[i] : lbounds[i]
         cnst_term += xs[i]*shift
         for j = 1:N+2
             xdata[j, i] = xs[i]*(xdata[j, i] - shift)
@@ -84,10 +80,10 @@ function suppFcnUI(xs, data_sort, lbounds, ubounds,
     #objective for line-search
     #VG should you type annotate log_eps?
     function f(lam::Float64)
-        val_out::Float64 = lam*log_eps::Float64 + cnst_term
+        val_out = lam*log_eps + cnst_term
         for i =1:d
-            q::Vector{Float64} = xs[i] > 0 ? qR : qL
-            log_inner = 0.
+            q = xs[i] > 0 ? qR : qL
+            log_inner = 0.0
             for j = 1:N+2
                 log_inner += q[j] * exp(xdata[j, i]/lam)
             end
@@ -127,10 +123,6 @@ end
 #preferred interface
 suppFcn(xs, w::UIOracle, cut_sense) = suppFcnUI(xs, w.data_sort, w.lbounds, w.ubounds, w.log_eps, w.qL, w.qR, cut_sense)
 
-# JuMPeR alerting us that we're handling this contraint
-registerConstraint(w::UIOracle, rm::Model, ind::Int, prefs) = 
-	! get(prefs, :prefer_cuts, true) && error("Only cutting plane supported")
-
 function setup(w::UIOracle, rm::Model, prefs)
     # Extract preferences we care about
     w.debug_printcut = get(prefs, :debug_printcut, false)
@@ -139,37 +131,3 @@ function setup(w::UIOracle, rm::Model, prefs)
     @assert (rd.numUncs == size(w.data_sort, 2)) "Num Uncertainties $(rd.numUncs) doesn't match columns in data $(size(w.data_sort, 2))"
     @assert (length(rd.uncertaintyset) == 0) "Auxiliary constraints on uncertainties not yet supported"
 end
-
-function generateCut(w::UIOracle, m::Model, rm::Model, inds::Vector{Int}, active=false)
-    new_cons = {}
-    rd = JuMPeR.getRobust(rm)
-    for ind in inds
-        con = JuMPeR.get_uncertain_constraint(rm, ind)
-        cut_sense, xs, lhs_const = JuMPeR.build_cut_objective(rm, con, m.colVal)
-        zstar, ustar = suppFcnUI(xs, w.data_sort, w.lbounds, w.ubounds, w.log_eps, w.qL, w.qR, cut_sense)
-        lhs_of_cut = zstar + lhs_const
-
-        # SUBJECT TO CHANGE: active cut detection
-        if active
-            push!(rd.activecuts[ind], 
-                JuMPeR.cut_to_scen(ustar, 
-                    JuMPeR.check_cut_status(con, lhs_of_cut, w.cut_tol) == :Active))
-            continue
-        end
-
-        # Check violation
-        if JuMPeR.check_cut_status(con, lhs_of_cut, w.cut_tol) != :Violate
-            w.debug_printcut && JuMPeR.debug_printcut(rm ,m,w,lhs_of_cut,con,nothing)
-            continue  # No violation, no new cut
-        end
-        
-        # Create and add the new constraint
-        new_con = JuMPeR.build_certain_constraint(m, con, ustar)
-        w.debug_printcut && JuMPeR.debug_printcut(rm, m, w, lhs_of_cut, con, new_con)
-        push!(new_cons, new_con)
-    end
-    return new_cons
-end
-
-#Shouldn't be called
-generateReform(w::UIOracle, m::Model, rm::Model, inds::Vector{Int}) = 0

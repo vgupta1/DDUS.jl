@@ -2,7 +2,6 @@
 # UDY Oracle 
 ###
 # At the moment only supports cutting planes
-import JuMPeR: registerConstraint, setup, generateCut, generateReform
 import JuMP.UnsetSolver
 
 using JuMP, Mosek  #Right now SDPs require Mosek
