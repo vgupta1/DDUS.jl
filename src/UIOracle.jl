@@ -67,10 +67,10 @@ function suppFcnUI(xs, data_sort, lbounds, ubounds,
     end
 
     #extend data with bounds, pre-condition for stability
-    xdata::Matrix{Float64} = [lbounds'; data_sort; ubounds']
-    cnst_term::Float64 = 0.
+    xdata = [lbounds'; data_sort; ubounds']
+    cnst_term = 0.0
     for i = 1:d
-        shift = xs[i] > 0. ? ubounds[i] : lbounds[i]
+        shift = xs[i] > 0.0 ? ubounds[i] : lbounds[i]
         cnst_term += xs[i]*shift
         for j = 1:N+2
             xdata[j, i] = xs[i]*(xdata[j, i] - shift)
@@ -80,10 +80,10 @@ function suppFcnUI(xs, data_sort, lbounds, ubounds,
     #objective for line-search
     #VG should you type annotate log_eps?
     function f(lam::Float64)
-        val_out::Float64 = lam*log_eps::Float64 + cnst_term
+        val_out = lam*log_eps + cnst_term
         for i =1:d
-            q::Vector{Float64} = xs[i] > 0 ? qR : qL
-            log_inner = 0.
+            q = xs[i] > 0 ? qR : qL
+            log_inner = 0.0
             for j = 1:N+2
                 log_inner += q[j] * exp(xdata[j, i]/lam)
             end
