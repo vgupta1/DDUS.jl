@@ -52,11 +52,13 @@ function suppFcnUI(xs, data, lbounds, ubounds, log_eps, Gamma; cut_sense=:Max, l
 end
 
 #returns zstar, ustar
-function suppFcnUI(xs, data_sort, lbounds, ubounds, log_eps, qL, qR, cut_sense, lam_min=1e-8, lam_max = 1e2, xtol=1e-8)
-    toggle = 1
+function suppFcnUI(xs, data_sort, lbounds, ubounds, 
+                   log_eps, qL::Vector{Float64}, qR::Vector{Float64}, 
+                   cut_sense, lam_min=1e-8, lam_max = 1e2, xtol=1e-8)
+    sgn_flip = 1
     if cut_sense == :Min
-        xs = copy(-xs)
-        toggle = -1
+        xs = -xs
+        sgn_flip = -1
     end
 
     const N = size(data_sort, 1)
@@ -65,45 +67,61 @@ function suppFcnUI(xs, data_sort, lbounds, ubounds, log_eps, qL, qR, cut_sense, 
 
     if is_degen(d, Gamma, log_eps)
         ustar = degen_case(xs, lbounds, ubounds)
-        return toggle*dot(xs, ustar), ustar
+        return sgn_flip*dot(xs, ustar), ustar
     end
 
-    #extend the data with the bounds
-    const data = [ lbounds' ; data_sort ; ubounds' ]
-
-    function f(lam::Float64)
-        term = lam * log_eps
-        term2 = 0.0
-        for i =1:d
-            #corrected for overflow
-            if xs[i] > 0
-                t = exp(xs[i] * (data[:, i] - ubounds[i]) / lam)
-                t = dot(qR, t)
-                term2 += lam * (xs[i] * ubounds[i]/lam + log(t))
-            else
-                t = exp(xs[i] * (data[:, i] - lbounds[i]) / lam)
-                t = dot(qL, t)
-                term2 += lam * (xs[i] * lbounds[i]/lam + log(t))
-            end
-            term += term2
+    #extend data with bounds, pre-condition for stability
+    xdata::Matrix{Float64} = [lbounds'; data_sort; ubounds']
+    cnst_term::Float64 = 0.
+    for i = 1:d
+        shift = xs[i] > 0. ? ubounds[i] : lbounds[i]
+        cnst_term += xs[i]*shift
+        for j = 1:N+2
+            xdata[j, i] = xs[i]*(xdata[j, i] - shift)
         end
-        term
     end
+
+    #objective for line-search
+    #VG should you type annotate log_eps?
+    function f(lam::Float64)
+        val_out::Float64 = lam*log_eps::Float64 + cnst_term
+        for i =1:d
+            q::Vector{Float64} = xs[i] > 0 ? qR : qL
+            log_inner = 0.
+            for j = 1:N+2
+                log_inner += q[j] * exp(xdata[j, i]/lam)
+            end
+            val_out += lam*log(log_inner)
+        end
+        val_out    
+    end
+
     res = Optim.optimize(f, lam_min, lam_max)
     !res.converged && error("Lambda linesearch did not converge")
     lamstar = res.minimum
-    obj1 = res.f_minimum
+
+    #reconstruct optimal sol.
     ustar = zeros(Float64, d)
     for i = 1:d
         if xs[i] >= 0
-            qstar = qR .* exp(xs[i]*data[:, i]/lamstar)
+            qstar = qR .* exp(xdata[:, i]/lamstar)
         else
-            qstar = qL .* exp(xs[i]*data[:, i]/lamstar)
+            qstar = qL .* exp(xdata[:, i]/lamstar)
         end
         qstar /= sum(qstar)
-        ustar[i] = dot(qstar, data[:, i])
+
+        #use the unconditioned data to construct sol
+        for j= 2:N+1
+            ustar[i] += qstar[j]*data_sort[j-1, i]
+        end
+        ustar[i] += qstar[1]*lbounds[i] + qstar[N+2]*ubounds[i]
     end
-    toggle*dot(ustar, xs), ustar
+
+    #Not checked for performance, but should always be true
+    # println(res.f_minimum, "\t", dot(ustar, xs))
+    #@assert abs(res.f_minimum - dot(ustar, xs)) <= 1e-6
+
+    sgn_flip*dot(ustar, xs), ustar
 end
 
 #preferred interface
