@@ -1,6 +1,6 @@
 using DDUS
 using FactCheck
-using JuMPeR
+using JuMP, JuMPeR
 
 include("test_helpers.jl")  #loads up generic functionality
 
