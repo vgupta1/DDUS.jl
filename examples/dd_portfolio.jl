@@ -7,7 +7,7 @@
 #        1^T x == 1
 #        x >= 0
 # where U is constructed from data
-using JuMPeR, DDUS, Distributions
+using JuMP, JuMPeR, DDUS, Distributions
 
 #generates some silly market data for example
 function genReturnData(numAssets, numObs)
@@ -30,16 +30,16 @@ oracle = UCSOracle(mkt_data, .1, .2)
 m = RobustModel()
 setDefaultOracle!(m, oracle)
 @defVar(m, xs[1:5] >= 0)
-@defVar(m, t)
+@defVar(m, t <= 100)
 @defUnc(m, us[1:5])
 @addConstraint(m, sum(xs) == 1.)
-addConstraint(m, sum([us[i] * xs[i] for i =1:5]) >= t)
+@addConstraint(m, sum{us[i] * xs[i], i=1:5} >= t)
 @setObjective(m, Max, t)
 
 #for now, must use cuts to solve
 #Notice how set construction takes advantage of the correlations tructure
 #So that allocation favors higher indices
-println(solveRobust(m, prefer_cuts=true))
+println(solve(m, prefer_cuts=true))
 println("Obj Value:\t", getObjectiveValue(m))
 println("Portfolio:\t", getValue(xs))
 
