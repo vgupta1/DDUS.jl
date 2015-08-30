@@ -8,24 +8,24 @@ facts("suppFcnTest UM") do
 
 	w = UMOracle(lquants, uquants, 1e-6, false)
 	zstar, ustar = suppFcn([1, 1], w, :Min)
-	@fact zstar =>  roughly(-0.3)
-	@fact ustar[1] => roughly(-0.05)
-	@fact ustar[2] => roughly(-0.25)
+	@fact zstar -->  roughly(-0.3)
+	@fact ustar[1] --> roughly(-0.05)
+	@fact ustar[2] --> roughly(-0.25)
 
 	zstar, ustar = suppFcn([1, 1], w, :Max)
-	@fact zstar => roughly(.3)
-	@fact ustar[1] => roughly(.1)
-	@fact ustar[2] => roughly(.2)
+	@fact zstar --> roughly(.3)
+	@fact ustar[1] --> roughly(.1)
+	@fact ustar[2] --> roughly(.2)
 
 	zstar, ustar = suppFcn([-1,  1], w, :Min)
-	@fact zstar => roughly(-.35)
-	@fact ustar[1] => roughly(.1)
-	@fact ustar[2] => roughly(-.25)
+	@fact zstar --> roughly(-.35)
+	@fact ustar[1] --> roughly(.1)
+	@fact ustar[2] --> roughly(-.25)
 
 	zstar, ustar = suppFcn([-1,  1], w, :Max)
-	@fact zstar => roughly(.25)
-	@fact ustar[1] => roughly(-.05)
-	@fact ustar[2] => roughly(.2)
+	@fact zstar --> roughly(.25)
+	@fact ustar[1] --> roughly(-.05)
+	@fact ustar[2] --> roughly(.2)
 end
 
 facts("portTest for UM") do

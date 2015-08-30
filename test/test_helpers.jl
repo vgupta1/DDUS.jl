@@ -16,8 +16,8 @@ function portTest(oracle, zstar_val, ustar_vals; unc_lower=nothing, unc_upper=no
 	addConstraint(m, sum([us[i] * xs[i] for i =1:2]) >= t)
 
 	@setObjective(m, Max, t)
-	@fact solve(m, prefer_cuts=true, report=false, active_cuts=true) => :Optimal
-	@fact getObjectiveValue(m) => roughly(zstar_val, TOL)
-	@fact getValue(xs[1])      => roughly(ustar_vals[1], TOL)
-	@fact getValue(xs[2])      => roughly(ustar_vals[2], TOL)
+	@fact solve(m, prefer_cuts=true, report=false, active_cuts=true) --> :Optimal
+	@fact getObjectiveValue(m) --> roughly(zstar_val, TOL)
+	@fact getValue(xs[1])      --> roughly(ustar_vals[1], TOL)
+	@fact getValue(xs[2])      --> roughly(ustar_vals[2], TOL)
 end
