@@ -23,7 +23,7 @@ FBOracle(mfs, mbs, sigfs, sigbs, eps; TOL=1e-6) =
     FBOracle(mfs, mbs, sigfs, sigbs, log(1/eps), TOL, false)
 
 #Preferred constructors
-function FBOracle(data, eps, alpha1, alpha2; CUT_TOL=1e-6, numBoots=int(1e4))
+function FBOracle(data, eps, alpha1, alpha2; CUT_TOL=1e-6, numBoots=10_000)
     N, d  = size(data)
     mfs   = zeros(Float64, d)
     mbs   = zeros(Float64, d)
@@ -36,7 +36,7 @@ function FBOracle(data, eps, alpha1, alpha2; CUT_TOL=1e-6, numBoots=int(1e4))
     end
     FBOracle(mfs, mbs, sigfs, sigbs, eps, TOL=CUT_TOL)
 end
-FBOracle(data, eps, alpha; CUT_TOL=1e-6, numBoots=int(1e4)) = 
+FBOracle(data, eps, alpha; CUT_TOL=1e-6, numBoots=10_000) = 
     FBOracle(data, eps, alpha/2, alpha/2, CUT_TOL=CUT_TOL, numBoots=numBoots)
 
 suppFcn(xs, w::FBOracle, cut_sense) = 

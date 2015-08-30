@@ -26,7 +26,7 @@ end
 facts("portTest UCS No bounds") do
 	srand(8675309); data = randn(500, 2)
 	w = UCSOracle(data, .1, .1, .1)
-	portTest(w, -2.4630938710200345, [0.5253456488147422, 0.4746543511852578])
+	portTest(w, -2.4630938710200345, [0.5253456488147422, 0.4746543511852578],TOL=1e-2)
 end
 
 #VG Comment this back in when we have QP support in test suite

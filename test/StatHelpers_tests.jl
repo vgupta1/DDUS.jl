@@ -7,7 +7,7 @@ facts("bootstrapping tests") do
 	#single variate data
 	srand(8765309)
 	data = randn(1000)
-	@fact boot(data, mean, .9, 10000) -->roughly(0.10809317304982774, 1e-8)
+	@fact boot(data, mean, .9, 10000) --> roughly(0.108, 1e-3)
 
 	#multivariate data
 	srand(8765309)
@@ -31,8 +31,8 @@ end
 facts("fwdBackSigsTest") do
 	srand(8675309); data = randn(100)
 	sigfwd, sigback = calcSigsBoot(data, .1, 10000)
-	@fact sigfwd --> roughly(1.0918194948334807, 1e-10)
-	@fact sigback --> roughly(1.085918045549169, 1e-10)
+	@fact sigfwd  --> roughly(1.09, 1e-2)
+	@fact sigback --> roughly(1.09, 1e-2)
 end
 
 facts("KSGammaTest") do
@@ -41,15 +41,15 @@ end
 
 facts("boot_mu_test") do
 	srand(8675309); data = randn(100)
-	@fact boot_mu(data, .1, 100) --> roughly(0.15990283885940632)
+	@fact boot_mu(data, .1, 100) --> roughly(0.15,1e-2)
 end
 
 facts("boot_sigma_test") do
 	srand(8675309); data = randn(100)
-	@fact boot_sigma(data, .1, 100) --> roughly(0.196348437082907)
+	@fact boot_sigma(data, .1, 100) --> roughly(0.20,1e-2)
 end
 
 facts("ab_thresh_test") do
 	srand(8675309); data = randn(100, 3)
-	@fact calc_ab_thresh(data, .2, 100, 100) --> roughly(0.1777841615666656)
+	@fact calc_ab_thresh(data, .2, 100, 100) --> roughly(0.177,1e-3)
 end

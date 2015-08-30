@@ -1,6 +1,7 @@
 julia 0.3
 JuMP 0.10
 JuMPeR 0.2
+Compat
 Distributions
 Roots
 Optim

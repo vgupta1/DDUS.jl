@@ -173,7 +173,7 @@ function LCXOracle(data, eps_, alpha;
                     cut_tol=1e-6, max_iter=100, ab_cut_tol=1e-6, 
                     lbounds=Float64[], ubounds=Float64[],
                     debug_printcut=false, trace=false, 
-                    numSamples=int(1e4), numBoots=int(1e4), 
+                    numSamples=10_000, numBoots=10_000, 
                     Gamma =-1.0, abcut_solver=nothing, outer_solver=nothing) 
     @assert (0 < eps_ < 1) "Epsilon invalid: $eps_"
     Gamma_ = Gamma < 0 ? calc_ab_thresh(data, alpha, numBoots, numSamples) : Gamma

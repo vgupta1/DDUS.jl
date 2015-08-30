@@ -1,6 +1,6 @@
 ## Test Helpers for Oracles
 
-function portTest(oracle, zstar_val, ustar_vals; unc_lower=nothing, unc_upper=nothing, TOL=1e-5)
+function portTest(oracle, zstar_val, ustar_vals; unc_lower=nothing, unc_upper=nothing, TOL=1e-3)
 	m = RobustModel()
 
 	if unc_lower != nothing
@@ -13,7 +13,7 @@ function portTest(oracle, zstar_val, ustar_vals; unc_lower=nothing, unc_upper=no
 	@defVar(m, xs[1:2] >= 0)
 	@addConstraint(m, sum(xs) == 1.)
 	@defVar(m, t <= 1e6)
-	addConstraint(m, sum([us[i] * xs[i] for i =1:2]) >= t)
+	@addConstraint(m, sum{us[i] * xs[i], i=1:2} >= t)
 
 	@setObjective(m, Max, t)
 	@fact solve(m, prefer_cuts=true, report=false, active_cuts=true) --> :Optimal

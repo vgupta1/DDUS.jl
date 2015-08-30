@@ -13,7 +13,7 @@ function boot(data::Vector, fun::Function, prob::Float64, numBoots::Int, f_args.
 	const N = size(data, 1)
 	dist = DiscreteUniform(1, N)
 	out = zeros(Float64, numBoots)
-	indices = Int[1:N]
+	indices = collect(1:N)
 	for i = 1:numBoots
 		rand!(dist, indices)
 		out[i] = fun(data[indices], f_args...)
@@ -25,7 +25,7 @@ function boot(data::Matrix, fun::Function, prob::Float64, numBoots::Int, f_args.
 	const N = size(data, 1)
 	dist = DiscreteUniform(1, N)
 	out = zeros(Float64, numBoots)
-	indices = Int[1:N]
+	indices = collect(1:N)
 	for i = 1:numBoots
 		rand!(dist, indices)
 		out[i] = fun(data[indices, :], f_args...)
@@ -240,7 +240,7 @@ end
 #Assumes sorted_list, and sort_list[start] >= val
 function findlast_sort(val::Float64, sort_list::Vector; TOL::Float64=1e-10, start::Int64=1)
     i::Int64 = 1
-    for i = int(start):length(sort_list)
+    for i = start:length(sort_list)
         if abs(val - sort_list[i]) > TOL
             break
         end

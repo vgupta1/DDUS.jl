@@ -35,8 +35,8 @@ degen_case(xs, lbounds::Vector{Float64}, ubounds::Vector{Float64}) = [xs[i] >= 0
 function gen_ql_qr(N::Int, Gamma)
     qL = zeros(Float64, N+2)
     qL[1] = Gamma
-    qL[2:ifloor(N * (1-Gamma)) + 1] = 1/N
-    qL[ifloor(N * (1-Gamma)) + 2] = 1-sum(qL)
+    qL[2:floor(Int, N * (1-Gamma)) + 1] = 1/N
+    qL[floor(Int, N * (1-Gamma)) + 2] = 1-sum(qL)
     @assert (abs(sum(qL)-1) <= 1e-10) "QL not normalized $(sum(qL))"
     return qL, qL[N+2:-1:1]
 end
