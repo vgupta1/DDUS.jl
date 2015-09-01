@@ -5,6 +5,8 @@
 module DDUS
 
 # The JuMPeR oracle interface
+using JuMP
+using Compat
 import JuMPeR
 import JuMPeR: AbstractOracle, registerConstraint, setup, generateCut, generateReform
 
