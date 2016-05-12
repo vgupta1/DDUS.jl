@@ -2,7 +2,7 @@
 Generalized versions of the JuMPeR interface
 Delegates to correct cutting plane algorithm via suppFcn
 =#
-typealias DDUSOracles Union(UMOracle, UIOracle, FBOracle, LCXOracle, UCSOracle)
+typealias DDUSOracles Union{UMOracle, UIOracle, FBOracle, LCXOracle, UCSOracle}
 
 # JuMPeR alerting us that we're handling this contraint
 registerConstraint(w::DDUSOracles, rm::Model, ind::Int, prefs) =

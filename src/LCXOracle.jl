@@ -156,8 +156,8 @@ type LCXOracle <: AbstractOracle
     cut_tol::Float64         # 1e-6
     max_iter::Int64          # 100
     ab_cut_tol::Float64      # 1e-6
-    abcut_solver::Union(AbstractMathProgSolver, Nothing)
-    outer_solver::Union(AbstractMathProgSolver, Nothing)
+    abcut_solver::Union{AbstractMathProgSolver, Void}
+    outer_solver::Union{AbstractMathProgSolver, Void}
     
     lbounds::Vector{Float64}
     ubounds::Vector{Float64}
