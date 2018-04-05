@@ -3,18 +3,44 @@
 [![Build Status](https://travis-ci.org/vgupta1/DDUS.jl.svg?branch=master)](https://travis-ci.org/vgupta1/DDUS.jl)
 [![Coverage Status](https://coveralls.io/repos/vgupta1/DDUS.jl/badge.svg)](https://coveralls.io/r/vgupta1/DDUS.jl)
 
-**DDUS.jl** contains implementations of many of the uncertainty sets from the paper
+In the spirit of reproducible research, **DDUS.jl** contains implementations of many of the uncertainty sets from the paper
 
-> [D. Bertsimas, V. Gupta and N. Kallus, "Data-Driven Robust Optimization"](http://arxiv.org/abs/1401.0212)
+> [Data-Driven Robust Optimization](https://link.springer.com/article/10.1007/s10107-017-1125-8) by D. Bertsimas, V. Gupta and N. Kallus, Mathematical Programming 167.2 (2018): 235-292.
 
-as "oracles" for use with [JuMPeR.jl](https://github.com/IainNZ/JuMPeR.jl). Specifically, we have implemented oracles for each of the following sets (Eq. numbers refer to previous paper):
+This paper is available from [Mathematical Programming](https://link.springer.com/article/10.1007/s10107-017-1125-8) or the [Vishal Gupta's website](http://www-bcf.usc.edu/~guptavis/research.html).  
+
+
+Uncertainty sets are implemented as "oracles" for use with [JuMPeR.jl](https://github.com/IainNZ/JuMPeR.jl). Specifically, I have implemented oracles for each of the following sets (Eq. numbers refer to previous paper):
 - UM (Eq. 28) 
 - UI (Eq. 18) 
 - UFB (Eq. 23)
 - UCS (Eq. 35)
 - ULCX (Eq. 31)
 
-More sets and additional features may be added going forward based on interest.  For the most part, our implementations closely follow the descriptions in the paper.  In a few places, we have opted for simpler, approximate formulae for improved efficiency where we felt the difference in practice was negligible.
+More sets and additional features may be added going forward based on interest.  For the most part, our implementations closely follow the descriptions in the paper.  In a few places, we have opted for simpler, approximate formulae for improved efficiency where I felt the difference in practice was negligible.
+
+## Citation
+If you find this package useful, please consider citing the above paper as:
+
+```bibtex
+@article{bertsimas2018data,
+  title={Data-driven robust optimization},
+  author={Bertsimas, Dimitris and Gupta, Vishal and Kallus, Nathan},
+  journal={Mathematical Programming},
+  volume={167},
+  number={2},
+  pages={235--292},
+  year={2018},
+  publisher={Springer}
+}
+```
+
+## Licensing
+This code is available under the MIT License.  
+Copyright (c) 2016 Vishal Gupta
+
+Also, if you use any portion of the software, I'd appreciate a quick note telling me the application.  As an academic, I like hearing about when my work is used and when it (hopefully) has impact.  
+
 
 ## Usage
 
@@ -49,18 +75,3 @@ The cited paper proves that under certain conditions, each of the above sets sat
 
 Many applications, however, do not require provably good performance, just *practically* good performance.  In these cases, we suggest following the suggestions in Section 10 of the paper, and choosing the set, epsilon and alpha via cross-validation.  Some generic functionality to do this will (hopefully) be added soon.  In the meantime, ????? in the examples folder illustrates one possible cross-validation scheme for a particular example.  
 
-## Citation
-If you find this package useful, please consider citing the above paper as:
-
-```bibtex
-@ARTICLE{2014arXiv1401.0212B,
-   author = {Bertsimas, D. and Gupta, V. and Kallus, N.},
-   title = "{Data-Driven Robust Optimization}",
-   journal = {ArXiv e-prints},
-   eprint = {1401.0212},
-   keywords = {Mathematics - Optimization and Control},
-   year = 2014,
-   month = dec,
-   url = {http://arxiv.org/abs/1401.0212},
-}
-```
